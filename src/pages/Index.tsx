@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Square, Plus, MessageSquare, ImagePlus } from "lucide-react";
+import { Send, Square, Plus, MessageSquare, ImagePlus, Copy, RefreshCw, Check } from "lucide-react";
 import { MODELS, Model, streamChat, generateTitle, ChatMessage } from "@/lib/openrouter";
 import { useChatStore } from "@/hooks/useChatStore";
 import ModelSelector from "@/components/chat/ModelSelector";
@@ -111,15 +111,63 @@ export default function Index() {
 
   const handleStop = () => abortRef.current?.abort();
 
+  const messages = store.activeChat?.messages || [];
+  const hasMessages = messages.length > 0;
+
+  const [copiedChat, setCopiedChat] = useState(false);
+
+  const handleCopyChat = () => {
+    const text = messages.map((m) => `${m.role === "user" ? "You" : "BhosduAi"}: ${m.content.replace(/\[IMAGE:.*?\]/g, "[image]")}`).join("\n\n");
+    navigator.clipboard.writeText(text);
+    setCopiedChat(true);
+    setTimeout(() => setCopiedChat(false), 2000);
+  };
+
+  const handleRegenerate = useCallback(async () => {
+    if (isStreaming || !store.activeChatId || messages.length < 2) return;
+    const chatId = store.activeChatId;
+    const withoutLast = messages.slice(0, -1);
+    store.updateMessages(chatId, withoutLast);
+    setIsStreaming(true);
+
+    const apiMessages = withoutLast.map((m) => ({
+      ...m,
+      content: m.content.replace(/\[IMAGE:.*?\]/g, "").trim() || m.content,
+    }));
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let assistantContent = "";
+    store.updateMessages(chatId, [...withoutLast, { role: "assistant" as const, content: "" }]);
+
+    try {
+      await streamChat({
+        messages: apiMessages,
+        model,
+        signal: controller.signal,
+        onDelta: (delta) => {
+          assistantContent += delta;
+          store.updateMessages(chatId, [...withoutLast, { role: "assistant" as const, content: assistantContent }]);
+        },
+        onDone: () => {},
+      });
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        assistantContent += "\n\n*Error: " + err.message + "*";
+        store.updateMessages(chatId, [...withoutLast, { role: "assistant" as const, content: assistantContent }]);
+      }
+    } finally {
+      setIsStreaming(false);
+      abortRef.current = null;
+    }
+  }, [isStreaming, model, store, messages]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
-
-  const messages = store.activeChat?.messages || [];
-  const hasMessages = messages.length > 0;
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "hsl(var(--chat-bg))" }}>
@@ -225,6 +273,25 @@ export default function Index() {
                   <div className="typing-dot w-2 h-2 rounded-full bg-primary" />
                   <div className="typing-dot w-2 h-2 rounded-full bg-primary" />
                   <div className="typing-dot w-2 h-2 rounded-full bg-primary" />
+                </div>
+              )}
+              {/* Action buttons */}
+              {!isStreaming && messages.length >= 2 && messages[messages.length - 1]?.role === "assistant" && (
+                <div className="flex items-center gap-2 mt-1 mb-4">
+                  <button
+                    onClick={handleCopyChat}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    {copiedChat ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                    {copiedChat ? "Copied" : "Copy chat"}
+                  </button>
+                  <button
+                    onClick={handleRegenerate}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    <RefreshCw size={13} />
+                    Regenerate
+                  </button>
                 </div>
               )}
               <div ref={messagesEndRef} />
