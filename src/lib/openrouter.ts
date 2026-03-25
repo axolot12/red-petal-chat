@@ -1,29 +1,17 @@
 export interface Model {
   id: string;
   name: string;
-  apiKey: string;
   modelId: string;
 }
 
+export const API_KEY = "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";
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
 export const MODELS: Model[] = [
-  {
-    id: "venice",
-    name: "Venice Uncensored",
-    apiKey: "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",
-    modelId: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
-  },
-  {
-    id: "nemotron",
-    name: "Nemotron 3 Super",
-    apiKey: "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",
-    modelId: "nvidia/llama-3.3-nemotron-super-49b-v1:free",
-  },
-  {
-    id: "riverflow",
-    name: "Riverflow v2 Pro",
-    apiKey: "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",
-    modelId: "deepseek/deepseek-r1:free",
-  },
+  { id: "llama-3.3-70b", name: "Llama 3.3 70B", modelId: "llama-3.3-70b-versatile" },
+  { id: "llama-3.1-8b", name: "Llama 3.1 8B", modelId: "llama-3.1-8b-instant" },
+  { id: "mixtral-8x7b", name: "Mixtral 8x7B", modelId: "mixtral-8x7b-32768" },
+  { id: "gemma2-9b", name: "Gemma 2 9B", modelId: "gemma2-9b-it" },
 ];
 
 export interface ChatMessage {
@@ -44,13 +32,11 @@ export async function streamChat({
   onDone: () => void;
   signal?: AbortSignal;
 }) {
-  const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const resp = await fetch(API_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${model.apiKey}`,
+      Authorization: `Bearer ${API_KEY}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": window.location.origin,
-      "X-OpenRouter-Title": "Bhosdu Cord",
     },
     body: JSON.stringify({
       model: model.modelId,
@@ -99,10 +85,10 @@ export async function streamChat({
 
 export async function generateTitle(firstMessage: string, model: Model): Promise<string> {
   try {
-    const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const resp = await fetch(API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${model.apiKey}`,
+        Authorization: `Bearer ${API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
