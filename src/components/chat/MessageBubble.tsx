@@ -61,6 +61,8 @@ export default function MessageBubble({ message, onArtifact, isLast }: MessageBu
 function PreBlock({ children, onArtifact, isLast }: { children: React.ReactNode; onArtifact?: (code: string, lang: string) => void; isLast?: boolean }) {
   const [copied, setCopied] = useState(false);
 
+  const [autoOpened, setAutoOpened] = useState(false);
+
   let code = "";
   let lang = "text";
   const child = Array.isArray(children) ? children[0] : children;
@@ -71,12 +73,13 @@ function PreBlock({ children, onArtifact, isLast }: { children: React.ReactNode;
     if (match) lang = match[1];
   }
 
-  // Auto-open artifact for last message code blocks
+  // Auto-open artifact only once for the last message
   useEffect(() => {
-    if (isLast && code && onArtifact) {
+    if (isLast && code && onArtifact && !autoOpened) {
       onArtifact(code, lang);
+      setAutoOpened(true);
     }
-  }, [code, isLast]);
+  }, [isLast, code, autoOpened]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
