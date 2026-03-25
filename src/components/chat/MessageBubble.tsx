@@ -2,8 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ChatMessage } from "@/lib/openrouter";
 import { Copy, Check, Eye, Code2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -57,27 +56,7 @@ function PreBlock({ children, onArtifact, isLast }: { children: React.ReactNode;
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // On mobile: show a clickable artifact card instead of full code block
-  if (isMobile && onArtifact && code) {
-    return (
-      <div className="my-3">
-        {/* Artifact card */}
-        <button
-          onClick={() => onArtifact(code, lang)}
-          className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors text-left"
-        >
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Code2 size={18} className="text-primary" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground truncate">Artifact</p>
-            <p className="text-xs text-muted-foreground">{lang} • Tap to preview</p>
-          </div>
-          <Eye size={16} className="text-muted-foreground shrink-0" />
-        </button>
-      </div>
-    );
-  }
+  // Show clickable artifact box (no inline code), clicking opens artifact panel
 
   // Desktop: show clickable artifact box (no inline code), clicking opens artifact panel
   return (
