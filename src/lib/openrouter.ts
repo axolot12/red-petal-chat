@@ -36,11 +36,17 @@ export async function streamChat({
       Authorization: `Bearer ${API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: model.modelId,
-      messages,
-      stream: true,
-    }),
+      body: JSON.stringify({
+        model: model.modelId,
+        messages: [
+          {
+            role: "system",
+            content: "You are Axo Ai, a helpful assistant. Your knowledge was last updated in 2026. The current year is 2026. When asked about time, dates, or current events, respond accordingly based on 2026.",
+          },
+          ...messages,
+        ],
+        stream: true,
+      }),
     signal,
   });
 
