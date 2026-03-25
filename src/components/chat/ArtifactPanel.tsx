@@ -1,4 +1,4 @@
-import { X, Copy, Check } from "lucide-react";
+import { X, Copy, Check, Code, Eye } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,6 +10,8 @@ interface ArtifactPanelProps {
 
 export default function ArtifactPanel({ code, language, onClose }: ArtifactPanelProps) {
   const [copied, setCopied] = useState(false);
+  const isHtml = language === "html" || language === "htm";
+  const [showPreview, setShowPreview] = useState(isHtml);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
@@ -24,36 +26,56 @@ export default function ArtifactPanel({ code, language, onClose }: ArtifactPanel
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 250 }}
-        className="w-[480px] h-screen flex flex-col bg-artifact border-l border-sidebar-border shrink-0"
+        className="w-[500px] h-screen flex flex-col bg-popover border-l border-border shrink-0"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-artifact-header border-b border-sidebar-border">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-sm font-medium text-chat-foreground">Artifact</span>
-            <span className="text-xs text-muted-foreground font-mono bg-code px-2 py-0.5 rounded">{language}</span>
+            <span className="text-sm font-semibold text-foreground">Artifact</span>
+            <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded-md">{language}</span>
           </div>
           <div className="flex items-center gap-1">
+            {isHtml && (
+              <button
+                onClick={() => setShowPreview(!showPreview)}
+                className={`p-1.5 rounded-lg transition-colors ${
+                  showPreview ? "bg-primary/15 text-primary" : "hover:bg-muted text-muted-foreground"
+                }`}
+                title={showPreview ? "Show code" : "Show preview"}
+              >
+                {showPreview ? <Code size={16} /> : <Eye size={16} />}
+              </button>
+            )}
             <button
               onClick={handleCopy}
-              className="p-1.5 rounded-lg hover:bg-sidebar-accent text-muted-foreground hover:text-chat-foreground transition-colors"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
-              {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+              {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-sidebar-accent text-muted-foreground hover:text-chat-foreground transition-colors"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Code */}
-        <div className="flex-1 overflow-auto p-4">
-          <pre className="text-[0.82rem] font-mono leading-relaxed text-chat-foreground whitespace-pre-wrap">
-            <code>{code}</code>
-          </pre>
+        {/* Content */}
+        <div className="flex-1 overflow-auto">
+          {showPreview && isHtml ? (
+            <iframe
+              srcDoc={code}
+              title="HTML Preview"
+              className="w-full h-full border-0 bg-white"
+              sandbox="allow-scripts"
+            />
+          ) : (
+            <pre className="p-4 text-[0.82rem] font-mono leading-relaxed text-foreground whitespace-pre-wrap">
+              <code>{code}</code>
+            </pre>
+          )}
         </div>
       </motion.div>
     </AnimatePresence>

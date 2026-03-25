@@ -23,24 +23,21 @@ export default function ModelSelector({ selected, onSelect }: ModelSelectorProps
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-chat-input text-chat-foreground text-sm hover:bg-chat-user transition-colors"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg text-muted-foreground text-xs hover:text-foreground transition-colors"
       >
         {selected.name}
-        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-chat-input border border-sidebar-border rounded-lg shadow-xl z-50 min-w-[200px] py-1">
+        <div className="absolute bottom-full right-0 mb-1 bg-popover border border-border rounded-xl shadow-2xl z-50 min-w-[180px] py-1 overflow-hidden">
           {MODELS.map((m) => (
             <button
               key={m.id}
-              onClick={() => {
-                onSelect(m);
-                setOpen(false);
-              }}
+              onClick={() => { onSelect(m); setOpen(false); }}
               className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                 m.id === selected.id
                   ? "text-primary bg-primary/10"
-                  : "text-chat-foreground hover:bg-sidebar-accent"
+                  : "text-foreground hover:bg-muted"
               }`}
             >
               {m.name}
