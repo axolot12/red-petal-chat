@@ -2,8 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ChatMessage } from "@/lib/openrouter";
 import { Copy, Check, Eye, Code2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -40,8 +39,6 @@ export default function MessageBubble({ message, onArtifact, isLast }: MessageBu
 
 function PreBlock({ children, onArtifact, isLast }: { children: React.ReactNode; onArtifact?: (code: string, lang: string) => void; isLast?: boolean }) {
   const [copied, setCopied] = useState(false);
-  const [autoOpened, setAutoOpened] = useState(false);
-  const isMobile = useIsMobile();
 
   let code = "";
   let lang = "text";
@@ -53,64 +50,38 @@ function PreBlock({ children, onArtifact, isLast }: { children: React.ReactNode;
     if (match) lang = match[1];
   }
 
-  // Auto-open artifact only once for the last message (desktop only)
-  useEffect(() => {
-    if (!isMobile && isLast && code && onArtifact && !autoOpened) {
-      onArtifact(code, lang);
-      setAutoOpened(true);
-    }
-  }, [isLast, code, autoOpened, isMobile]);
-
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // On mobile: show a clickable artifact card instead of full code block
-  if (isMobile && onArtifact && code) {
-    return (
-      <div className="my-3">
-        {/* Artifact card */}
-        <button
-          onClick={() => onArtifact(code, lang)}
-          className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors text-left"
-        >
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Code2 size={18} className="text-primary" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground truncate">Artifact</p>
-            <p className="text-xs text-muted-foreground">{lang} • Tap to preview</p>
-          </div>
-          <Eye size={16} className="text-muted-foreground shrink-0" />
-        </button>
-      </div>
-    );
-  }
+  // Show clickable artifact box (no inline code), clicking opens artifact panel
 
+  // Desktop: show clickable artifact box (no inline code), clicking opens artifact panel
   return (
-    <div className="relative group my-3 rounded-xl overflow-hidden border border-border">
-      <div className="flex items-center justify-between px-3 py-2 bg-card text-xs text-muted-foreground">
-        <span className="font-mono">{lang}</span>
-        <div className="flex gap-1.5">
-          {onArtifact && code && (
-            <button
-              onClick={() => onArtifact(code, lang)}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-primary/20 hover:text-primary transition-colors"
-            >
-              <Eye size={12} />
-              View
-            </button>
-          )}
-          <button onClick={handleCopy} className="p-1 rounded-md hover:bg-primary/20 transition-colors">
+    <div className="my-3">
+      <button
+        onClick={() => onArtifact?.(code, lang)}
+        className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors text-left"
+      >
+        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <Code2 size={18} className="text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-foreground truncate">Artifact</p>
+          <p className="text-xs text-muted-foreground">{lang} • Click to view</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleCopy(); }}
+            className="p-1.5 rounded-md hover:bg-primary/20 transition-colors text-muted-foreground"
+          >
             {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
           </button>
+          <Eye size={16} className="text-muted-foreground shrink-0" />
         </div>
-      </div>
-      <pre className="!m-0 !rounded-none p-4 overflow-x-auto !bg-[hsl(var(--code-bg))]">
-        <code className={`language-${lang} font-mono text-[0.82rem]`}>{code}</code>
-      </pre>
+      </button>
     </div>
   );
 }

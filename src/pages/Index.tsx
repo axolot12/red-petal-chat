@@ -9,10 +9,16 @@ import ChatsDrawer from "@/components/chat/ChatsDrawer";
 import logo from "@/assets/logo.png";
 
 function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  // Use India Standard Time (UTC+5:30)
+  const now = new Date();
+  const istOffset = 5.5 * 60; // IST is UTC+5:30 in minutes
+  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const istMinutes = (utcMinutes + istOffset) % (24 * 60);
+  const hour = Math.floor(istMinutes / 60);
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  if (hour >= 17 && hour < 21) return "Good evening";
+  return "Good night";
 }
 
 export default function Index() {
@@ -21,6 +27,11 @@ export default function Index() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [artifact, setArtifact] = useState<{ code: string; language: string } | null>(null);
+
+  // Auto-close artifact when switching or creating chats
+  useEffect(() => {
+    setArtifact(null);
+  }, [store.activeChatId]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
