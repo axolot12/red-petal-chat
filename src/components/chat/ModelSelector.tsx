@@ -20,20 +20,27 @@ export default function ModelSelector({ selected, onSelect }: ModelSelectorProps
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative inline-block">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
         className="flex items-center gap-1 px-2 py-1 rounded-lg text-muted-foreground text-xs hover:text-foreground transition-colors"
       >
         {selected.name}
         <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute bottom-full right-0 mb-1 bg-popover border border-border rounded-xl shadow-2xl z-50 min-w-[180px] py-1 overflow-hidden">
+        <div
+          className="fixed z-[9999] min-w-[180px] py-1 overflow-hidden bg-popover border border-border rounded-xl shadow-2xl"
+          style={{
+            bottom: "auto",
+            left: ref.current ? ref.current.getBoundingClientRect().right - 180 : 0,
+            top: ref.current ? ref.current.getBoundingClientRect().top - (MODELS.length * 40 + 8) : 0,
+          }}
+        >
           {MODELS.map((m) => (
             <button
               key={m.id}
-              onClick={() => { onSelect(m); setOpen(false); }}
+              onClick={(e) => { e.stopPropagation(); onSelect(m); setOpen(false); }}
               className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                 m.id === selected.id
                   ? "text-primary bg-primary/10"
