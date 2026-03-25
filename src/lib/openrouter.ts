@@ -8,10 +8,8 @@ export const API_KEY = "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
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 export const MODELS: Model[] = [
-  { id: "llama-3.3-70b", name: "Llama 3.3 70B", modelId: "llama-3.3-70b-versatile" },
-  { id: "llama-3.1-8b", name: "Llama 3.1 8B", modelId: "llama-3.1-8b-instant" },
-  { id: "mixtral-8x7b", name: "Mixtral 8x7B", modelId: "mixtral-8x7b-32768" },
-  { id: "gemma2-9b", name: "Gemma 2 9B", modelId: "gemma2-9b-it" },
+  { id: "axo-v1", name: "Axo Ai v1", modelId: "llama-3.3-70b-versatile" },
+  { id: "axo-v2", name: "Axo Ai v2", modelId: "llama-3.1-8b-instant" },
 ];
 
 export interface ChatMessage {
