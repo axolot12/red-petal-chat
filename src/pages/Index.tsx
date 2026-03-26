@@ -1,17 +1,22 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Square, Plus, MessageSquare, Copy, RefreshCw, Check } from "lucide-react";
+import { Send, Square, Plus, MessageSquare, Copy, RefreshCw, Check, MoreVertical, Download, Brain } from "lucide-react";
 import { MODELS, Model, streamChat, generateTitle, ChatMessage } from "@/lib/openrouter";
 import { useChatStore } from "@/hooks/useChatStore";
 import ModelSelector from "@/components/chat/ModelSelector";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ArtifactPanel from "@/components/chat/ArtifactPanel";
 import ChatsDrawer from "@/components/chat/ChatsDrawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.png";
 
 function getGreeting(): string {
-  // Use India Standard Time (UTC+5:30)
   const now = new Date();
-  const istOffset = 5.5 * 60; // IST is UTC+5:30 in minutes
+  const istOffset = 5.5 * 60;
   const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
   const istMinutes = (utcMinutes + istOffset) % (24 * 60);
   const hour = Math.floor(istMinutes / 60);
@@ -26,12 +31,13 @@ export default function Index() {
   const [model, setModel] = useState<Model>(MODELS[0]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const [artifact, setArtifact] = useState<{ code: string; language: string } | null>(null);
 
-  // Auto-close artifact when switching or creating chats
   useEffect(() => {
     setArtifact(null);
   }, [store.activeChatId]);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -40,7 +46,6 @@ export default function Index() {
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(scrollToBottom, [store.activeChat?.messages]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -63,6 +68,7 @@ export default function Index() {
     store.updateMessages(chatId, newMessages);
     setInput("");
     setIsStreaming(true);
+    setIsThinking(true);
 
     if (chat.messages.length === 0) {
       generateTitle(text, model).then((title) => store.updateTitle(chatId!, title));
@@ -79,6 +85,7 @@ export default function Index() {
         messages: newMessages,
         model,
         signal: controller.signal,
+        onThinkingDone: () => setIsThinking(false),
         onDelta: (delta) => {
           assistantContent += delta;
           store.updateMessages(chatId!, [...newMessages, { role: "assistant", content: assistantContent }]);
@@ -92,6 +99,7 @@ export default function Index() {
       }
     } finally {
       setIsStreaming(false);
+      setIsThinking(false);
       abortRef.current = null;
     }
   }, [input, isStreaming, model, store]);
@@ -104,7 +112,7 @@ export default function Index() {
   const [copiedChat, setCopiedChat] = useState(false);
 
   const handleCopyChat = () => {
-    const text = messages.map((m) => `${m.role === "user" ? "You" : "BhosduAi"}: ${m.content}`).join("\n\n");
+    const text = messages.map((m) => `${m.role === "user" ? "You" : "Axo Ai"}: ${m.content}`).join("\n\n");
     navigator.clipboard.writeText(text);
     setCopiedChat(true);
     setTimeout(() => setCopiedChat(false), 2000);
@@ -116,6 +124,7 @@ export default function Index() {
     const withoutLast = messages.slice(0, -1);
     store.updateMessages(chatId, withoutLast);
     setIsStreaming(true);
+    setIsThinking(true);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -127,6 +136,7 @@ export default function Index() {
         messages: withoutLast,
         model,
         signal: controller.signal,
+        onThinkingDone: () => setIsThinking(false),
         onDelta: (delta) => {
           assistantContent += delta;
           store.updateMessages(chatId, [...withoutLast, { role: "assistant" as const, content: assistantContent }]);
@@ -140,6 +150,7 @@ export default function Index() {
       }
     } finally {
       setIsStreaming(false);
+      setIsThinking(false);
       abortRef.current = null;
     }
   }, [isStreaming, model, store, messages]);
@@ -151,9 +162,15 @@ export default function Index() {
     }
   };
 
+  const handleDownloadApk = () => {
+    const link = document.createElement("a");
+    link.href = "/BhosduAi.apk";
+    link.download = "BhosduAi.apk";
+    link.click();
+  };
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "hsl(var(--chat-bg))" }}>
-      {/* Chats Drawer */}
       <ChatsDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -163,7 +180,6 @@ export default function Index() {
         onDeleteChat={store.deleteChat}
       />
 
-      {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-3">
@@ -182,10 +198,26 @@ export default function Index() {
             >
               <MessageSquare size={17} />
             </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  title="More options"
+                >
+                  <MoreVertical size={17} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="rounded-xl">
+                <DropdownMenuItem onClick={handleDownloadApk} className="gap-2 cursor-pointer">
+                  <Download size={15} />
+                  Download for Android
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className="flex items-center gap-2">
-            <img src={logo} alt="BhosduAi" width={24} height={24} className="opacity-70" />
-            <span className="text-sm font-semibold text-foreground tracking-tight">BhosduAi</span>
+            <img src={logo} alt="Axo Ai" width={24} height={24} className="opacity-70" />
+            <span className="text-sm font-semibold text-foreground tracking-tight">Axo Ai</span>
           </div>
         </div>
 
@@ -194,7 +226,7 @@ export default function Index() {
           {!hasMessages ? (
             <div className="flex flex-col items-center justify-center h-full px-4">
               <div className="flex items-center gap-3 mb-8">
-                <img src={logo} alt="BhosduAi" width={40} height={40} />
+                <img src={logo} alt="Axo Ai" width={40} height={40} />
                 <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "hsl(var(--greeting))" }}>
                   {getGreeting()}
                 </h1>
@@ -237,7 +269,15 @@ export default function Index() {
                   onArtifact={(code, lang) => setArtifact({ code, language: lang })}
                 />
               ))}
-              {isStreaming && messages[messages.length - 1]?.content === "" && (
+              {/* Thinking indicator */}
+              {isThinking && (
+                <div className="flex items-center gap-2 px-2 py-4">
+                  <Brain size={16} className="text-primary animate-pulse" />
+                  <span className="text-sm text-muted-foreground animate-pulse">Thinking...</span>
+                </div>
+              )}
+              {/* Typing dots when streaming but no content yet and not thinking */}
+              {isStreaming && !isThinking && messages[messages.length - 1]?.content === "" && (
                 <div className="flex gap-1.5 px-2 py-4">
                   <div className="typing-dot w-2 h-2 rounded-full bg-primary" />
                   <div className="typing-dot w-2 h-2 rounded-full bg-primary" />
@@ -277,7 +317,7 @@ export default function Index() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Reply to BhosduAi..."
+                  placeholder="Reply to Axo Ai..."
                   rows={1}
                   className="w-full bg-transparent px-5 pt-4 pb-2 text-foreground text-sm resize-none outline-none placeholder:text-muted-foreground"
                   style={{ minHeight: "44px", maxHeight: "160px" }}
