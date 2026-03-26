@@ -8,29 +8,15 @@ export interface Model {
 
 export const MODELS: Model[] = [
   {
-    id: "deepseek-r1",
-    name: "DeepSeek R1",
-    modelId: "deepseek-ai/deepseek-r1",
-    apiUrl: "https://integrate.api.nvidia.com/v1/chat/completions",
-    apiKey: "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",
-  },
-  {
-    id: "mistral-small",
-    name: "Mistral Small 3.1",
-    modelId: "mistralai/mistral-small-3.1-24b-instruct",
-    apiUrl: "https://integrate.api.nvidia.com/v1/chat/completions",
-    apiKey: "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",
-  },
-  {
-    id: "gpt-4o-mini",
-    name: "GPT-4o Mini",
-    modelId: "gpt-4o-mini",
-    apiUrl: "https://models.inference.ai.azure.com/chat/completions",
-    apiKey: "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",
-  },
-  {
-    id: "llama-70b",
+    id: "llama-70b-nvidia",
     name: "Llama 3.3 70B",
+    modelId: "meta/llama-3.3-70b-instruct",
+    apiUrl: "https://integrate.api.nvidia.com/v1/chat/completions",
+    apiKey: "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",
+  },
+  {
+    id: "llama-70b-groq",
+    name: "Llama 3.3 70B Fast",
     modelId: "llama-3.3-70b-versatile",
     apiUrl: "https://api.groq.com/openai/v1/chat/completions",
     apiKey: "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",
@@ -45,6 +31,7 @@ export const MODELS: Model[] = [
 ];
 
 export const FLUX_API_KEY = "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";
+export const CLOUDFLARE_TOKEN = "cfut_GkPH8by21ybb0kvd0sclLZwgop0f69irrJN7GRsN45d4c620";
 
 export interface ChatMessage {
   role: "user" | "assistant";
