@@ -8,13 +8,6 @@ export interface Model {
 
 export const MODELS: Model[] = [
   {
-    id: "llama-70b-nvidia",
-    name: "Llama 3.3 70B",
-    modelId: "meta/llama-3.3-70b-instruct",
-    apiUrl: "https://integrate.api.nvidia.com/v1/chat/completions",
-    apiKey: "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",
-  },
-  {
     id: "llama-70b-groq",
     name: "Llama 3.3 70B Fast",
     modelId: "llama-3.3-70b-versatile",
